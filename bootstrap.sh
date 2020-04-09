@@ -41,7 +41,7 @@ ZSH_THEME="agnoster"
 plugins=(git)
 source \$ZSH/oh-my-zsh.sh
 prompt_lab() {
-  prompt_segment 'black' 'default' '🧪🧪🧪🧪🧪'
+  prompt_segment 'black' 'default' '🧪🧪$(hostname)🧪🧪'
 }
 AGNOSTER_PROMPT_SEGMENTS=("prompt_lab" "\${AGNOSTER_PROMPT_SEGMENTS[@]}")
 AGNOSTER_PROMPT_SEGMENTS[3]=
@@ -152,11 +152,22 @@ DESECSTACK_DBMASTER_PASSWORD_pdns=$(_rand)
 DESECSTACK_NSMASTER_APIKEY=$(_rand)
 DESECSTACK_NSMASTER_CARBONSERVER=37.252.122.50
 DESECSTACK_NSMASTER_CARBONOURNAME=$DOMAIN
-DESECSTACK_WATCHDOG_SLAVES=ns1.example.org ns2.example.net
+DESECSTACK_WATCHDOG_SLAVES=ns1.$DOMAIN ns2.$DOMAIN
 DESECSTACK_PROMETHEUS_PASSWORD=$(_rand)
 EOF
   docker-compose run openvpn-server openvpn --genkey --secret /dev/stdout > openvpn-server/secrets/ta.key
   docker-compose pull
+  cat > .setup << EOF
+from desecapi.models import User, Token
+me = User(email='bar@example.com')
+me.save()
+token = Token(user=me)
+token.save()
+print(token.plain)
+quit(0)
+EOF
+  APITOKEN=$(docker-compose run -T api python3 manage.py shell < .setup)
+  http POST https://desec.$DOMAIN/api/v1/domains/ Authorization:"Token $APITOKEN" name="dedyn.$DOMAIN" | jq .keys
 }
 
 _certs() {
@@ -176,7 +187,7 @@ _certs() {
       --config-dir certbot/config --logs-dir certbot/logs --work-dir certbot/work \
       --manual --text --preferred-challenges dns \
       --manual-auth-hook ~/bin/desec_certbot_hook.sh \
-      --manual-cleanup-hook ~/bin/desec_certbot_hook.sh \
+      --manual-cleanup-hook ~/bin/desec_certbot_hook.sh \  # TODO update stack README
       --server https://acme-v02.api.letsencrypt.org/directory \
       --non-interactive --manual-public-ip-logging-ok --agree-tos --email "$EMAIL" \
       -d "*.${DOMAIN}" certonly
@@ -209,7 +220,7 @@ DESECSLAVE_IPV6_ADDRESS=$DESECSLAVE_IPV6_ADDRESS
 DESECSLAVE_CARBONSERVER=37.252.122.50
 DESECSLAVE_CARBONOURNAME=$DOMAIN-$HOST
 DESECSLAVE_NS_APIKEY=$(_rand)
-DESECSTACK_VPN_SERVER=$DOMAIN
+DESECSTACK_VPN_SERVER=desec.$DOMAIN
 EOF
     echo scp root@desec.\$DOMAIN:desec-stack/openvpn-server/secrets/ta.key pki/
     echo scp pki/ca.crt pki/ta.key pki/issued/$HOST.crt pki/private/$HOST.key root@\$HOST:desec-slave/openvpn-client/secrets/
@@ -258,7 +269,7 @@ vpn_stack() {
   [[ -d easy-rsa ]] || (echo "VPN not yet configured? Call $(basename "$0") to get started."; exit 1)
   [[ -n "${DOMAIN}" ]] || (echo "Set DOMAIN to the stack domain"; exit 1)
   ./easyrsa gen-req server nopass
-  ./easyrsa sign-req client server  # requires interaction
+  ./easyrsa sign-req server server  # requires interaction  # TODO update stack README
   echo scp pki/issued/server.crt pki/private/server.key pki/ca.crt root@desec.\$DOMAIN:desec-stack/openvpn-server/secrets/
   echo scp root@desec.\$DOMAIN:desec-stack/openvpn-server/secrets/ta.key pki/
 }
@@ -270,5 +281,7 @@ vpn_frontend() {
   ./easyrsa sign-req client $HOST
 
   # copy certificates (Consider umask)
-  echo scp pki/ta.key pki/ca.crt pki/issued/$HOST.crt pki/private/$HOST.key root@$HOST:desec-slave/openvpn-client/secrets/
+  echo scp pki/ta.key pki/ca.crt root@$HOST:desec-slave/openvpn-client/secrets/
+  echo scp pki/issued/$HOST.crt root@$HOST:desec-slave/openvpn-client/secrets/client.crt
+  echo scp pki/private/$HOST.key root@$HOST:desec-slave/openvpn-client/secrets/client.key
 }
