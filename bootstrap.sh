@@ -109,7 +109,7 @@ _dns() {
     {"type": "A",    "ttl":3600, "records": ["$IP4_NS2"], "subname": "ns2"},
     {"type": "A",    "ttl":3600, "records": ["$IP4_BACKEND"], "subname": "desec"},
     {"type": "A",    "ttl":3600, "records": ["$IP4_BACKEND"], "subname": "dedyn"},
-    {"type": "NS",   "ttl":3600, "records": ["ns1.$DOMAIN", "ns2.$DOMAIN"], "subname": "dedyn"},
+    {"type": "NS",   "ttl":3600, "records": ["ns1.$DOMAIN.", "ns2.$DOMAIN."], "subname": "dedyn"},
     {"type": "A",    "ttl":3600, "records": ["$IP4_BACKEND"], "subname": "*.desec"}
 ]
 EOF
@@ -166,8 +166,23 @@ token.save()
 print(token.plain)
 quit(0)
 EOF
+  IP4_BACKEND=$(curl https://checkipv4.dedyn.io/)
   APITOKEN=$(docker-compose run -T api python3 manage.py shell < .setup)
-  http POST https://desec.$DOMAIN/api/v1/domains/ Authorization:"Token $APITOKEN" name="dedyn.$DOMAIN" | jq .keys
+  # TODO container from above is still running, how to stop it properly?
+  docker stop $(docker ps -q)  # TODO for now, just stop everything
+  DS=$(http POST https://desec.$DOMAIN/api/v1/domains/ Authorization:"Token $APITOKEN" name="dedyn.$DOMAIN" | jq '.keys[0].ds')
+  http PUT https://desec.io/api/v1/domains/$DOMAIN/rrsets/ Authorization:"Token ${TOKEN}" << EOF
+[
+    {"type": "DS",   "ttl":3600, "records": $DS, "subname": "dedyn"}
+]
+EOF
+  # TODO add update6.dedyn.$DOMAIN
+  http PUT https://desec.$DOMAIN/api/v1/domains/dedyn.$DOMAIN/rrsets/ Authorization:"Token $APITOKEN" << EOF
+[
+    {"type": "NS",   "ttl":3600, "records": ["ns1.$DOMAIN.", "ns2.$DOMAIN."], "subname": ""},
+    {"type": "A",    "ttl":3600, "records": ["$IP4_BACKEND"], "subname": "update"}
+]
+EOF
 }
 
 _certs() {
@@ -190,7 +205,9 @@ _certs() {
       --manual-cleanup-hook ~/bin/desec_certbot_hook.sh \  # TODO update stack README
       --server https://acme-v02.api.letsencrypt.org/directory \
       --non-interactive --manual-public-ip-logging-ok --agree-tos --email "$EMAIL" \
-      -d "*.${DOMAIN}" certonly
+      -d "*.${DOMAIN}" -d "update.dedyn.${DOMAIN}" -d "update6.dedyn.$DOMAIN" \
+      -d "checkip.dedyn.${DOMAIN}" -d "checkipv4.dedyn.${DOMAIN}" -d "checkipv6.dedyn.${DOMAIN}" \
+      certonly
   )
   (
     mkdir -p certs
@@ -240,6 +257,9 @@ backend() {
   [[ -n "${EMAIL}" ]] || (echo "Please set EMAIL (for LE cert)."; exit 1)
   [[ -n "${TOKEN}" ]] || (echo "Please set TOKEN to an access token for the deSEC.io account controlling the sandbox domain."; exit 1)
   # TODO add check for VPN keys
+
+  echo desec.$DOMAIN > /etc/hostname
+  hostname desec.$DOMAIN
   host
   _dns
   _certs
@@ -250,8 +270,10 @@ frontend() {
   [[ -n "${HOST}" ]] || (echo "Please set HOST to my hostname."; exit 1)
   [[ -n "${DESECSLAVE_IPV6_SUBNET}" ]] || (echo "Please set DESECSLAVE_IPV6_SUBNET to fd00:deec::/80."; exit 1)
   [[ -n "${DESECSLAVE_IPV6_ADDRESS}" ]] || (echo "Please set DESECSLAVE_IPV6_SUBNET to fd00:deec::2"; exit 1)
-
   _check
+
+  echo $HOST > /etc/hostname
+  hostname $HOST
   host
   _frontend
 }
@@ -280,7 +302,8 @@ vpn_frontend() {
   ./easyrsa gen-req $HOST nopass
   ./easyrsa sign-req client $HOST
 
-  # copy certificates (Consider umask)
+  # copy certificates
+  # TODO fix permissions on secret keys
   echo scp pki/ta.key pki/ca.crt root@$HOST:desec-slave/openvpn-client/secrets/
   echo scp pki/issued/$HOST.crt root@$HOST:desec-slave/openvpn-client/secrets/client.crt
   echo scp pki/private/$HOST.key root@$HOST:desec-slave/openvpn-client/secrets/client.key
