@@ -204,15 +204,15 @@ _frontend() {
     docker-compose pull
 
     cat >> .env << EOF
+DESECSLAVE_IPV6_SUBNET=$DESECSLAVE_IPV6_SUBNET
+DESECSLAVE_IPV6_ADDRESS=$DESECSLAVE_IPV6_ADDRESS
 DESECSLAVE_CARBONSERVER=37.252.122.50
 DESECSLAVE_CARBONOURNAME=$DOMAIN-$HOST
 DESECSLAVE_NS_APIKEY=$(_rand)
 DESECSTACK_VPN_SERVER=$DOMAIN
 EOF
-    echo scp root@\$SERVER:desec-stack/openvpn-client/secrets/ta.key pki/
-    for FILE in ca.crt ta.key issued/$HOST.crt private/$HOST.key; do
-      echo scp keys/ca.crt root@\$HOST:desec-slave/openvpn-client/secrets/
-    done
+    echo scp root@desec.\$DOMAIN:desec-stack/openvpn-server/secrets/ta.key pki/
+    echo scp pki/ca.crt pki/ta.key pki/issued/$HOST.crt pki/private/$HOST.key root@\$HOST:desec-slave/openvpn-client/secrets/
   )
 }
 
@@ -247,7 +247,7 @@ frontend() {
 
 vpn() {
   [[ -d easy-rsa ]] && (echo "VPN already configured? Delete easy-rsa directory to start over."; exit 1)
-  [[ -n "${DOMAIN}" ]] && (echo "Set DOMAIN to the stack domain"; exit 1)
+  [[ -n "${DOMAIN}" ]] || (echo "Set DOMAIN to the stack domain"; exit 1)
   git clone https://github.com/OpenVPN/easy-rsa.git
   ln -s easy-rsa/easyrsa3/easyrsa .
   ./easyrsa init-pki
@@ -256,11 +256,11 @@ vpn() {
 
 vpn_stack() {
   [[ -d easy-rsa ]] || (echo "VPN not yet configured? Call $(basename "$0") to get started."; exit 1)
+  [[ -n "${DOMAIN}" ]] || (echo "Set DOMAIN to the stack domain"; exit 1)
   ./easyrsa gen-req server nopass
   ./easyrsa sign-req client server  # requires interaction
-  for FILE in issued/server.crt private/server.key ca.crt; do
-    echo scp pki/$FILE \$SERVER:desec-stack/openvpn-server/secrets/
-  done
+  echo scp pki/issued/server.crt pki/private/server.key pki/ca.crt root@desec.\$DOMAIN:desec-stack/openvpn-server/secrets/
+  echo scp root@desec.\$DOMAIN:desec-stack/openvpn-server/secrets/ta.key pki/
 }
 
 vpn_frontend() {
