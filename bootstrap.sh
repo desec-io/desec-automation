@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -e  # TODO quits shell on exit 1, usually ending SSH session. How to avoid?
 
 # helper functions
 _rand() {
@@ -41,7 +41,7 @@ ZSH_THEME="agnoster"
 plugins=(git)
 source \$ZSH/oh-my-zsh.sh
 prompt_lab() {
-  prompt_segment 'black' 'default' '🧪🧪$(hostname)🧪🧪'
+  prompt_segment 'black' 'default' '☂ $(hostname) '
 }
 AGNOSTER_PROMPT_SEGMENTS=("prompt_lab" "\${AGNOSTER_PROMPT_SEGMENTS[@]}")
 AGNOSTER_PROMPT_SEGMENTS[3]=
@@ -239,8 +239,6 @@ DESECSLAVE_CARBONOURNAME=$DOMAIN-$HOST
 DESECSLAVE_NS_APIKEY=$(_rand)
 DESECSTACK_VPN_SERVER=desec.$DOMAIN
 EOF
-    echo scp root@desec.\$DOMAIN:desec-stack/openvpn-server/secrets/ta.key pki/
-    echo scp pki/ca.crt pki/ta.key pki/issued/$HOST.crt pki/private/$HOST.key root@\$HOST:desec-slave/openvpn-client/secrets/
   )
 }
 
