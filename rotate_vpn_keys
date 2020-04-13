@@ -20,7 +20,7 @@ cecho() {
 
 DOMAIN=$1
 BACKEND=desec.$1
-BACKEND_DC="/usr/local/src/desec-stack"  # "/root/desec-stack"
+BACKEND_DC="/root/desec-stack"
 FRONTEND_DC="/root/desec-slave"
 BACKEND_SECRETS="$BACKEND_DC/openvpn-server/secrets"
 FRONTEND_SECRETS="$FRONTEND_DC/openvpn-client/secrets"
@@ -36,17 +36,33 @@ fail() {
   fi
 }
 
-# TODO make backup idempotent
-BACKUP_DIR="pki.backup-$(date +%Y%m%d-%H%M%S)"
+BACKUP_DIR="pki.backup-$(date +%Y%m%d)"
 cecho "STEP 0/7: CREATING KEY BACKUPS INTO $BACKUP_DIR/"
 mkdir -p "$BACKUP_DIR"
-cecho "-> server keys"
 mkdir -p "$BACKUP_DIR/$BACKEND/"
-scp -pr "root@$BACKEND:$BACKEND_SECRETS/" "$BACKUP_DIR/$BACKEND/" || fail "$BACKEND"
-cecho "-> frontend keys"
+if scp -pr "root@$BACKEND:$BACKEND_SECRETS/" "$BACKUP_DIR/$BACKEND/"; then
+  cecho "-> $BACKEND backed up"
+else
+  fail "$BACKEND"
+  cecho "-> $BACKEND backup FAILED"
+fi
 echo "$FRONTENDS" | while IFS= read -r FRONTEND
 do
-  scp -pr "root@$FRONTEND:$FRONTEND_SECRETS/" "$BACKUP_DIR/$FRONTEND/" || fail "$FRONTEND"
+  if [ -d "$BACKUP_DIR/$FRONTEND" ] && [[ $(find "$BACKUP_DIR/$FRONTEND" | wc -l) -ge 6 ]]; then
+    cecho "-> $FRONTEND already present, skipped [$(find "$BACKUP_DIR/$FRONTEND" | wc -l) files]"
+    continue
+  fi
+  rm -rf "${BACKUP_DIR:?}/$FRONTEND"
+  TDIR=$(mktemp -d)
+  if scp -pr "root@$FRONTEND:$FRONTEND_SECRETS/" "$TDIR"; then
+    mv "$TDIR" "$BACKUP_DIR/$FRONTEND/" || fail "$FRONTEND"
+    rm -fr "$TDIR"
+    cecho "-> $FRONTEND keys backed up"
+  else
+    fail "$FRONTEND"
+    cecho "-> $FRONTEND keys FAILED"
+  fi
+  rm -rf "$TDIR"
 done
 
 if [ -n "$FAILURES" ]; then
@@ -162,4 +178,5 @@ do
   ssh -n "root@$HOST" "cd $FRONTEND_DC && docker-compose restart openvpn-client"
 done
 
-cecho "DONE"
+cecho "DONE. DELETE PKI BACKUP AND NEW PKI USING"
+cecho "-> \`srm $BACKUP_DIR $PKI\`"
