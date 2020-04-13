@@ -69,7 +69,7 @@ _setup() {
   # unset root password
   passwd -d -l root
 
-  # TODO disable password authentication in /etc/ssh/sshd_config: PasswordAuthentication no
+  echo 'PasswordAuthentication No' >> /etc/ssh/sshd_config
 
   # graceful restarts
   systemctl enable acpid && service acpid start
@@ -151,7 +151,7 @@ DESECSTACK_NSLORD_DEFAULT_TTL=3600
 DESECSTACK_DBMASTER_PASSWORD_pdns=$(_rand)
 DESECSTACK_NSMASTER_APIKEY=$(_rand)
 DESECSTACK_NSMASTER_CARBONSERVER=37.252.122.50
-DESECSTACK_NSMASTER_CARBONOURNAME=$DOMAIN
+DESECSTACK_NSMASTER_CARBONOURNAME=
 DESECSTACK_WATCHDOG_SLAVES=ns1.$DOMAIN ns2.$DOMAIN
 DESECSTACK_PROMETHEUS_PASSWORD=$(_rand)
 EOF
@@ -280,6 +280,7 @@ vpn() {
   [[ -d easy-rsa ]] && (echo "VPN already configured? Delete easy-rsa directory to start over."; exit 1)
   [[ -n "${DOMAIN}" ]] || (echo "Set DOMAIN to the stack domain"; exit 1)
   git clone https://github.com/OpenVPN/easy-rsa.git
+  rm -f easyrsa
   ln -s easy-rsa/easyrsa3/easyrsa .
   ./easyrsa init-pki
   ./easyrsa build-ca nopass
