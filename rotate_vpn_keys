@@ -179,4 +179,4 @@ do
 done
 
 cecho "DONE. DELETE PKI BACKUP AND NEW PKI USING"
-cecho "-> \`srm $BACKUP_DIR $PKI\`"
+cecho "-> \`srm -r $BACKUP_DIR $PKI\`"
