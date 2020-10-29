@@ -202,7 +202,7 @@ _certs() {
       --config-dir certbot/config --logs-dir certbot/logs --work-dir certbot/work \
       --manual --text --preferred-challenges dns \
       --manual-auth-hook ~/bin/desec_certbot_hook.sh \
-      --manual-cleanup-hook ~/bin/desec_certbot_hook.sh \  # TODO update stack README
+      --manual-cleanup-hook ~/bin/desec_certbot_hook.sh \
       --server https://acme-v02.api.letsencrypt.org/directory \
       --non-interactive --manual-public-ip-logging-ok --agree-tos --email "$EMAIL" \
       -d "*.${DOMAIN}" -d "update.dedyn.${DOMAIN}" -d "update6.dedyn.$DOMAIN" \
@@ -290,7 +290,7 @@ vpn_stack() {
   [[ -d easy-rsa ]] || (echo "VPN not yet configured? Call $(basename "$0") to get started."; exit 1)
   [[ -n "${DOMAIN}" ]] || (echo "Set DOMAIN to the stack domain"; exit 1)
   ./easyrsa gen-req server nopass
-  ./easyrsa sign-req server server  # requires interaction  # TODO update stack README
+  ./easyrsa sign-req server server  # requires interaction
   echo scp pki/issued/server.crt pki/private/server.key pki/ca.crt root@desec.\$DOMAIN:desec-stack/openvpn-server/secrets/
   echo scp root@desec.\$DOMAIN:desec-stack/openvpn-server/secrets/ta.key pki/
 }
