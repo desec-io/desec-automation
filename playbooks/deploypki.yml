@@ -12,28 +12,28 @@
       register: host
     - name: Create secrets directory
       file:
-        path: desec-slave/openvpn-client/secrets
+        path: desec-ns/openvpn-client/secrets
         state: directory
         mode: '0700'
     - name: Copy secret key
       copy:
         src: pki/private/{{ ansible_fqdn }}.key
-        dest: desec-slave/openvpn-client/secrets/client.key
+        dest: desec-ns/openvpn-client/secrets/client.key
       when: host.stat.exists
     - name: Copy public key
       copy:
         src: pki/issued/{{ ansible_fqdn }}.crt
-        dest: desec-slave/openvpn-client/secrets/client.crt
+        dest: desec-ns/openvpn-client/secrets/client.crt
       when: host.stat.exists
     - name: Copy ca cert
       copy:
         src: pki/ca.crt
-        dest: desec-slave/openvpn-client/secrets/ca.crt
+        dest: desec-ns/openvpn-client/secrets/ca.crt
       when: host.stat.exists
     - name: Copy TA key
       copy:
         src: pki/private/ta.key
-        dest: desec-slave/openvpn-client/secrets/ta.key
+        dest: desec-ns/openvpn-client/secrets/ta.key
       when: host.stat.exists
 
 

@@ -8,7 +8,7 @@
     - name: Check if backup is available
       delegate_to: localhost
       stat:
-        path: pki-backup/{{ ansible_fqdn }}/desec-slave/openvpn-client/secrets/client.key
+        path: pki-backup/{{ ansible_fqdn }}/desec-ns/openvpn-client/secrets/client.key
       register: secrets
     - name: Restore
       copy:

@@ -1,6 +1,6 @@
 # Automated Deployment of deSEC Services
 
-`bootstrap.sh` can be used to install desec-stack and desec-slave on freshly installed servers.
+`bootstrap.sh` can be used to install desec-stack and desec-ns on freshly installed servers.
 
 ## Install deSEC Stack
 
@@ -41,7 +41,7 @@ want or do not need.
 
 1. To install deSEC staff SSH keys for root, execute `sudo _keys` (optional).
 1. To install zsh and shell-perks, execute `sudo _shell` (optional).
-1. To install desec-stack/desec-slave dependencies (Debian/Ubuntu), execute `sudo _host` (required). Note that this will mess
+1. To install desec-stack and desec-ns dependencies (Debian/Ubuntu), execute `sudo _host` (required). Note that this will mess
     with APT settings and **your root password**, as well as delete all docker data. 
 1. To setup the DNS using a deSEC.io-Account, run `_dns`. (Yes we are nesting a desec-stack in a desec-stack.)
 1. To obtain certificates via Let's Encrypt, run `_certs`.
@@ -102,16 +102,16 @@ repository, use the install playbook.
 It requires the following information to be supplied:
 
 1. `DESECSTACK_DOMAIN` of the deSEC stack you want to connect to.
-1. `DESECNS_IPV6_ADDRESS`: IPv6 address the frontend will be reachable under.
-1. `DESECNS_IPV6_SUBNET`: subnet of `DESECNS_IPV6_ADDRESS`, in CIDR notation.
-1. `DESEC_LMDB_BACKUP`: full qualified path of created LMDB backup (see above).
+1. `DESEC_NS_IPV6_ADDRESS`: IPv6 address the frontend will be reachable under.
+1. `DESEC_NS_IPV6_SUBNET`: subnet of `DESEC_NS_IPV6_ADDRESS`, in CIDR notation.
+1. `DESEC_NS_LMDB_BACKUP`: full qualified path of created LMDB backup (see above).
 
 ```shell script
 ansible-playbook playbooks/frontend.yml -i hosts \
   -e DESECSTACK_DOMAIN=io \
-  -e DESECNS_IPV6_ADDRESS="2607:f740:e00a:deec::2" \
-  -e DESECNS_IPV6_SUBNET="2607:f740:e00a:deec::/80" \
-  -e DESEC_LMDB_BACKUP=lmdb-backup/ns3.sandbox.dedyn.io/desec-slave/lmdb-backup/backup/20201030:161412_dump.tar.gz
+  -e DESEC_NS_IPV6_ADDRESS="2607:f740:e00a:deec::2" \
+  -e DESEC_NS_IPV6_SUBNET="2607:f740:e00a:deec::/80" \
+  -e DESEC_NS_LMDB_BACKUP=lmdb-backup/ns3.sandbox.dedyn.io/desec-ns/lmdb-backup/backup/20201030:161412_dump.tar.gz
 ```
 
 ### Prepare And Deploy PKI

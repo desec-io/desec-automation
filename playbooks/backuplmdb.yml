@@ -6,19 +6,19 @@
   tasks:
     - name: Shut down frontend
       community.general.docker_compose:
-        project_src: desec-slave
+        project_src: desec-ns
         state: absent
     - name: Create lmdb backup
       command:
         cmd: ./dump.sh
-        chdir: desec-slave
+        chdir: desec-ns
     - name: Start frontend
       community.general.docker_compose:
-        project_src: desec-slave
+        project_src: desec-ns
         state: present
     - name: Find lmdb backup
       find:
-        path: desec-slave/lmdb-backup/backup/
+        path: desec-ns/lmdb-backup/backup/
       register: files
     - name: Fetch lmdb backup
       fetch:

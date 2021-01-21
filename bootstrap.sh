@@ -226,17 +226,17 @@ _certs() {
 _frontend() {
   systemctl disable systemd-resolved && service systemd-resolved stop
   (
-    git clone https://github.com/desec-io/desec-slave.git
-    cd desec-slave || exit
+    git clone https://github.com/desec-io/desec-ns.git
+    cd desec-ns || exit
     mkdir openvpn-client/secrets
     docker-compose pull
 
     cat >> .env << EOF
-DESECSLAVE_IPV6_SUBNET=$DESECSLAVE_IPV6_SUBNET
-DESECSLAVE_IPV6_ADDRESS=$DESECSLAVE_IPV6_ADDRESS
-DESECSLAVE_CARBONSERVER=37.252.122.50
-DESECSLAVE_CARBONOURNAME=$DOMAIN-$HOST
-DESECSLAVE_NS_APIKEY=$(_rand)
+DESEC_NS_IPV6_SUBNET=$DESEC_NS_IPV6_SUBNET
+DESEC_NS_IPV6_ADDRESS=$DESEC_NS_IPV6_ADDRESS
+DESEC_NS_CARBONSERVER=37.252.122.50
+DESEC_NS_CARBONOURNAME=$DOMAIN-$HOST
+DESEC_NS_APIKEY=$(_rand)
 DESECSTACK_VPN_SERVER=desec.$DOMAIN
 EOF
   )
@@ -266,8 +266,8 @@ backend() {
 
 frontend() {
   [[ -n "${HOST}" ]] || (echo "Please set HOST to my hostname."; exit 1)
-  [[ -n "${DESECSLAVE_IPV6_SUBNET}" ]] || (echo "Please set DESECSLAVE_IPV6_SUBNET to fd00:deec::/80."; exit 1)
-  [[ -n "${DESECSLAVE_IPV6_ADDRESS}" ]] || (echo "Please set DESECSLAVE_IPV6_SUBNET to fd00:deec::2"; exit 1)
+  [[ -n "${DESEC_NS_IPV6_SUBNET}" ]] || (echo "Please set DESEC_NS_IPV6_SUBNET to fd00:deec::/80."; exit 1)
+  [[ -n "${DESEC_NS_IPV6_ADDRESS}" ]] || (echo "Please set DESEC_NS_IPV6_SUBNET to fd00:deec::2"; exit 1)
   _check
 
   echo $HOST > /etc/hostname
@@ -303,7 +303,7 @@ vpn_frontend() {
 
   # copy certificates
   # TODO fix permissions on secret keys
-  echo scp pki/ta.key pki/ca.crt root@$HOST:desec-slave/openvpn-client/secrets/
-  echo scp pki/issued/$HOST.crt root@$HOST:desec-slave/openvpn-client/secrets/client.crt
-  echo scp pki/private/$HOST.key root@$HOST:desec-slave/openvpn-client/secrets/client.key
+  echo scp pki/ta.key pki/ca.crt root@$HOST:desec-ns/openvpn-client/secrets/
+  echo scp pki/issued/$HOST.crt root@$HOST:desec-ns/openvpn-client/secrets/client.crt
+  echo scp pki/private/$HOST.key root@$HOST:desec-ns/openvpn-client/secrets/client.key
 }

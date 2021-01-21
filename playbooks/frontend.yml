@@ -1,5 +1,7 @@
-- name: install frontend-c
-  hosts: frontends_c
+- name: install frontends
+  hosts:
+    - frontends_a
+    - frontends_c
   remote_user: root
 
   tasks:
@@ -72,32 +74,32 @@
     - name: download frontend software
       git:
         repo: 'https://github.com/desec-io/desec-ns.git'
-        dest: desec-slave
+        dest: desec-ns
         version: master
 
     - name: Pull docker images for frontend
       community.general.docker_compose:
-        project_src: desec-slave
+        project_src: desec-ns
         pull: yes
         state: absent
 
     - name: Create .env
       template:
         src: dotenv.j2
-        dest: desec-slave/.env
+        dest: desec-ns/.env
         mode: '0600'
 
     - name: Upload lmdb backup
       copy:
-        src: '{{ DESEC_LMDB_BACKUP }}'
-        dest: desec-slave/lmdb-backup/backup
+        src: '{{ DESEC_NS_LMDB_BACKUP }}'
+        dest: desec-ns/lmdb-backup/backup
 
     - name: Find lmdb backup
       find:
-        path: desec-slave/lmdb-backup/backup/
+        path: desec-ns/lmdb-backup/backup/
       register: files
 
     - name: Restore lmdb backup
       command:
         cmd: './load.sh {{ (files.files | sort(attribute="ctime"))[-1].path | basename }}'
-        chdir: desec-slave
+        chdir: desec-ns
