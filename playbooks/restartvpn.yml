@@ -1,0 +1,23 @@
+- name: Restart Stack VPN
+  hosts: stack
+  remote_user: root
+
+  tasks:
+    - name: Restart OpenVPN container
+      community.general.docker_compose:
+        project_src: desec-stack
+        restarted: yes
+        services: openvpn-server
+
+- name: Restart Frontends VPN
+  hosts:
+    - frontends_a
+    - frontends_c
+  remote_user: root
+
+  tasks:
+    - name: Restart OpenVPN container
+      community.general.docker_compose:
+        project_src: desec-slave
+        restarted: yes
+        services: openvpn-client

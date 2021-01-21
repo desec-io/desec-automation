@@ -1,0 +1,61 @@
+- name: Backup existing PKI from frontends
+  hosts:
+    - frontends_a
+    - frontends_c
+  remote_user: root
+
+  tasks:
+    - name: Check if host has secrets
+      stat:
+        path: desec-slave/openvpn-client/secrets
+      register: secrets
+    - name: Fetch private key
+      fetch:
+        src: desec-slave/openvpn-client/secrets/client.key
+        dest: pki-backup/
+      when: secrets.stat.exists
+    - name: Fetch public key
+      fetch:
+        src: desec-slave/openvpn-client/secrets/client.crt
+        dest: pki-backup/
+      when: secrets.stat.exists
+    - name: Fetch ca certificate
+      fetch:
+        src: desec-slave/openvpn-client/secrets/ca.crt
+        dest: pki-backup/
+      when: secrets.stat.exists
+    - name: Fetch TA key
+      fetch:
+        src: desec-slave/openvpn-client/secrets/ta.key
+        dest: pki-backup/
+      when: secrets.stat.exists
+
+- name: Backup existing PKI from stack
+  hosts: stack
+  remote_user: root
+
+  tasks:
+    - name: Check if stack has secrets
+      stat:
+        path: desec-stack/openvpn-server/secrets
+      register: secrets
+    - name: Fetch private key
+      fetch:
+        src: desec-stack/openvpn-server/secrets/server.key
+        dest: pki-backup/
+      when: secrets.stat.exists
+    - name: Fetch public key
+      fetch:
+        src: desec-stack/openvpn-server/secrets/server.crt
+        dest: pki-backup/
+      when: secrets.stat.exists
+    - name: Fetch CA cert
+      fetch:
+        src: desec-stack/openvpn-server/secrets/ca.crt
+        dest: pki-backup/
+      when: secrets.stat.exists
+    - name: Fetch TA key
+      fetch:
+        src: desec-stack/openvpn-server/secrets/ta.key
+        dest: pki-backup/
+      when: secrets.stat.exists

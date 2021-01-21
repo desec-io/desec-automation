@@ -1,0 +1,11 @@
+- name: Start Frontends
+  hosts:
+    #- frontends_a
+    - frontends_c
+  remote_user: root
+
+  tasks:
+    - name: Start frontend
+      community.general.docker_compose:
+        project_src: desec-slave
+        state: present

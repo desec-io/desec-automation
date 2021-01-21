@@ -1,0 +1,84 @@
+- name: Create fresh OpenVPN PKI
+  hosts: localhost
+
+  tasks:
+    - name: EasyRSA Checkout
+      git:
+        repo: https://github.com/OpenVPN/easy-rsa.git
+        accept_hostkey: True
+        version: v3.0.8
+        dest: easy-rsa
+
+    - name: Configure easyrsa3
+      template:
+        src: vars.j2
+        dest: easy-rsa/easyrsa3/vars
+
+    - name: Check if PKI exists
+      stat:
+        path: pki
+      register: pki
+    - name: Initialize PKI
+      shell: ./easyrsa init-pki
+      args:
+        chdir: ./easy-rsa/easyrsa3
+        creates: pki
+      when: not pki.stat.exists
+
+    - name: Link to PKI folder
+      file:
+        src: easy-rsa/easyrsa3/pki
+        dest: pki
+        state: link
+
+    - name: Check if CA exists
+      stat:
+        path: pki/private/ca.key
+      register: ca
+    - name: Build CA
+      command:
+        cmd: ./easyrsa build-ca nopass
+        chdir: ./easy-rsa/easyrsa3
+        creates: pki/private/ca.key
+      when: not ca.stat.exists
+
+    - name: Check if server key pair exists
+      stat:
+        path: pki/private/server.key
+      register: server
+    - name: Generate server key pair
+      command:
+        cmd: ./easyrsa build-server-full server nopass
+        chdir: ./easy-rsa/easyrsa3
+        creates: pki/server.key
+      when: not server.stat.exists
+
+    - name: Check if ta.key exists
+      stat:
+        path: pki/private/ta.key
+      register: ta
+    - name: Generate ta.key
+      command: openvpn --genkey --secret pki/private/ta.key
+      args:
+        chdir: ./easy-rsa/easyrsa3
+        creates: pki/private/ta.key
+      when: not ta.stat.exists
+
+- name: Create frontend certificates
+  hosts:
+    - frontends_a
+    - frontends_c
+  remote_user: root
+  tasks:
+    - name: Check if key exists
+      delegate_to: localhost
+      stat:
+        path: pki/private/{{ ansible_fqdn }}.key
+      register: host
+    - name: Create key pair
+      delegate_to: localhost
+      command:
+        cmd: ./easyrsa build-client-full {{ ansible_fqdn }} nopass
+        chdir: easy-rsa/easyrsa3
+        creates: pki/private/{{ ansible_fqdn }}.key
+      when: not host.stat.exists

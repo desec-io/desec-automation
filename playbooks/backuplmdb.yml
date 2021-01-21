@@ -1,0 +1,26 @@
+- name: Backup existing LMDB from sandbox frontends
+  hosts:
+    - frontends_sandbox
+  remote_user: root
+
+  tasks:
+    - name: Shut down frontend
+      community.general.docker_compose:
+        project_src: desec-slave
+        state: absent
+    - name: Create lmdb backup
+      command:
+        cmd: ./dump.sh
+        chdir: desec-slave
+    - name: Start frontend
+      community.general.docker_compose:
+        project_src: desec-slave
+        state: present
+    - name: Find lmdb backup
+      find:
+        path: desec-slave/lmdb-backup/backup/
+      register: files
+    - name: Fetch lmdb backup
+      fetch:
+        src: '{{ (files.files | sort(attribute="ctime"))[-1].path }}'
+        dest: lmdb-backup/

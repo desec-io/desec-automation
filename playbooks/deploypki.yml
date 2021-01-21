@@ -1,0 +1,74 @@
+- name: Deploy new OpenVPN PKI to Frontends
+  hosts:
+    - frontends_a
+    - frontends_c
+  remote_user: root
+
+  tasks:
+    - name: Check if key exists
+      delegate_to: localhost
+      stat:
+        path: pki/private/{{ ansible_fqdn }}.key
+      register: host
+    - name: Create secrets directory
+      file:
+        path: desec-slave/openvpn-client/secrets
+        state: directory
+        mode: '0700'
+    - name: Copy secret key
+      copy:
+        src: pki/private/{{ ansible_fqdn }}.key
+        dest: desec-slave/openvpn-client/secrets/client.key
+      when: host.stat.exists
+    - name: Copy public key
+      copy:
+        src: pki/issued/{{ ansible_fqdn }}.crt
+        dest: desec-slave/openvpn-client/secrets/client.crt
+      when: host.stat.exists
+    - name: Copy ca cert
+      copy:
+        src: pki/ca.crt
+        dest: desec-slave/openvpn-client/secrets/ca.crt
+      when: host.stat.exists
+    - name: Copy TA key
+      copy:
+        src: pki/private/ta.key
+        dest: desec-slave/openvpn-client/secrets/ta.key
+      when: host.stat.exists
+
+
+- name: Deploy new OpenVPN PKI to Stack
+  hosts: stack
+  remote_user: root
+
+  tasks:
+    - name: Check if key exists
+      delegate_to: localhost
+      stat:
+        path: pki/private/server.key
+      register: host
+    - name: Create secrets directory
+      file:
+        path: desec-stack/openvpn-server/secrets
+        state: directory
+        mode: '0700'
+    - name: Copy secret key
+      copy:
+        src: pki/private/server.key
+        dest: desec-stack/openvpn-server/secrets/server.key
+      when: host.stat.exists
+    - name: Copy public key
+      copy:
+        src: pki/issued/server.crt
+        dest: desec-stack/openvpn-server/secrets/server.crt
+      when: host.stat.exists
+    - name: Copy ca cert
+      copy:
+        src: pki/ca.crt
+        dest: desec-stack/openvpn-server/secrets/ca.crt
+      when: host.stat.exists
+    - name: Copy TA key
+      copy:
+        src: pki/private/ta.key
+        dest: desec-stack/openvpn-server/secrets/ta.key
+      when: host.stat.exists

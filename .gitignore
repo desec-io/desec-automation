@@ -1,2 +1,7 @@
 .idea
 
+# files created by playbooks
+easy-rsa
+lmdb-backup
+pki
+pki-backup
