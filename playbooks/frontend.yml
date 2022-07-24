@@ -88,7 +88,8 @@
       community.general.docker_compose:
         project_src: desec-ns
         pull: yes
-        state: absent
+        state: present
+        recreate: never
 
     - name: Create .env
       template:
