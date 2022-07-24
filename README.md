@@ -93,3 +93,13 @@ Ansible playbooks in here can be improved a lot:
 - No configuration of automated updates included yet
 - Organization of playbooks can be improved
 - Not all playbooks are genuinely idempotent
+
+
+## Debugging
+
+To run a command (query) against all frontends, the following statement can be used. (Requires zsh.)
+
+```
+for NS in $(cat hosts | grep -vE '^$|\[|digga')
+(echo -n "$NS: "; dig CDNSKEY _dsboot.desec.io._signal.ns2.desec.org @$NS +short; echo)
+```
