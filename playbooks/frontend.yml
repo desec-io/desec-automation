@@ -80,7 +80,7 @@
       git:
         repo: 'https://github.com/desec-io/desec-ns.git'
         dest: desec-ns
-        version: master
+        version: main
 
     - name: Pull docker images for frontend
       community.general.docker_compose:
