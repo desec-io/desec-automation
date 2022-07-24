@@ -61,10 +61,10 @@
         dest: /usr/local/bin/docker-compose
         mode: 'u+x,g+x'
 
-#    - name: enable docker daemon (for reboots)
-#      systemd:
-#        name: docker
-#        enable: yes
+    - name: enable docker daemon (for reboots)
+      systemd:
+        name: docker
+        enabled: yes
 
     - name: configure docker daemon
       copy:
