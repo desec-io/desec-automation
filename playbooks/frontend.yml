@@ -55,11 +55,11 @@
         - certbot
         - acpid
 
-    - name: Install docker-compose
-      command: {{ item }}
-        with_items:
-        - curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64" -o /usr/local/bin/docker-compose
-        - chmod +x /usr/local/bin/docker-compose
+    - name: Install docker-compose from official github repo
+      get_url:
+        url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: 'u+x,g+x'
 
 #    - name: enable docker daemon (for reboots)
 #      systemd:
