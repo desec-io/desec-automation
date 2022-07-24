@@ -77,6 +77,14 @@ Use the
 In case something goes wrong, use the `restorepki` playbook to revert to the old PKI.
 
 
+### Start/restart Frontends
+
+After setting up everything with the instructions above, start/restart the frontends using
+
+```shell script
+ansible-playbook playbooks/startfrontends.yml -i hosts
+```
+
 ### TODO
 
 Ansible playbooks in here can be improved a lot:
