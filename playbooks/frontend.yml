@@ -51,7 +51,9 @@
         - libmysqlclient-dev
         - python3-dev
         - python3-venv
+        - python3-docker
         - docker.io
+        - docker-compose  # note that we need this for the compose Python module, but the binary gets replaced below!
         - certbot
         - acpid
 
