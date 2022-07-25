@@ -44,25 +44,59 @@ Additionally, the following information may be provided:
 
 Note that these information may be different for different name server names!
 
-```shell script
-ansible-playbook playbooks/frontend.yml -i hosts --limit "frontends_a1 frontends_a2" \
-  -e DESECSTACK_DOMAIN=io \
-  -e DESEC_NS_IPV6_ADDRESS="2607:f740:e633:deec::2" \
-  -e DESEC_NS_IPV6_SUBNET="2607:f740:e633:deec::/80" \
-  -e DESEC_NS_SIGNALING_DOMAIN_ZONE_PRIVATE_KEY_B64=$KEY \
-  -e DESEC_NS_NAME=ns1.desec.io \
-  -e DESEC_NS_LMDB_BACKUP=lmdb-backup/ns3.sandbox.dedyn.io/desec-ns/lmdb-backup/backup/20201030:161412_dump.tar.gz
-```
+### Update Procedure
 
-```shell script
-ansible-playbook playbooks/frontend.yml -i hosts --limit "fontends_c1 frontends_c2" \
-  -e DESECSTACK_DOMAIN=io \
-  -e DESEC_NS_IPV6_ADDRESS="2607:f740:e00a:deec::2" \
-  -e DESEC_NS_IPV6_SUBNET="2607:f740:e00a:deec::/80" \
-  -e DESEC_NS_SIGNALING_DOMAIN_ZONE_PRIVATE_KEY_B64=$KEY \
-  -e DESEC_NS_NAME=ns2.desec.org \
-  -e DESEC_NS_LMDB_BACKUP=lmdb-backup/ns3.sandbox.dedyn.io/desec-ns/lmdb-backup/backup/20201030:161412_dump.tar.gz
-```
+Be careful to **not** run any of the playbooks below without the `limit` parameter!
+
+1. Shut down BGP for Group 1
+
+    ```shell script
+    ansible-playbook playbooks/stopbgp.yml --limit="frontends_a1 frontends_c1" -i hosts
+    ```
+
+1. Update software for Group 1, separately for A and C networks
+
+    Store private key for Bootstrapping zone in shell variables.
+
+    ```shell script
+    NS1_KEY=...
+    NS2_KEY=...
+    ```
+
+    ```shell script
+    ansible-playbook playbooks/frontend.yml -i hosts --limit "frontends_a1" \
+      -e DESECSTACK_DOMAIN=io \
+      -e DESEC_NS_IPV6_ADDRESS="2607:f740:e633:deec::2" \
+      -e DESEC_NS_IPV6_SUBNET="2607:f740:e633:deec::/80" \
+      -e DESEC_NS_SIGNALING_DOMAIN_ZONE_PRIVATE_KEY_B64=$NS1_KEY \
+      -e DESEC_NS_NAME=ns1.desec.io \
+      -e DESEC_NS_LMDB_BACKUP=lmdb-backup/ns3.sandbox.dedyn.io/desec-ns/lmdb-backup/backup/20201030:161412_dump.tar.gz
+    ```
+
+    ```shell script
+    ansible-playbook playbooks/frontend.yml -i hosts --limit "frontends_c1" \
+      -e DESECSTACK_DOMAIN=io \
+      -e DESEC_NS_IPV6_ADDRESS="2607:f740:e00a:deec::2" \
+      -e DESEC_NS_IPV6_SUBNET="2607:f740:e00a:deec::/80" \
+      -e DESEC_NS_SIGNALING_DOMAIN_ZONE_PRIVATE_KEY_B64=$NS2_KEY \
+      -e DESEC_NS_NAME=ns2.desec.org \
+      -e DESEC_NS_LMDB_BACKUP=lmdb-backup/ns3.sandbox.dedyn.io/desec-ns/lmdb-backup/backup/20201030:161412_dump.tar.gz
+    ```
+
+1. Recreate containers for Group 1
+
+    ```shell script
+    ansible-playbook playbooks/startfrontends.yml --limit "frontends_a1 frontends_c1" -i hosts
+    ```
+
+1. Test everything works as expected in Group 1
+1. Re-enable BGP for Group 1
+
+    ```shell script
+    ansible-playbook playbooks/startbgp.yml --limit="frontends_a2 frontends_c2" -i hosts
+    ```
+    
+1. Repeat for Group 2
 
 ### Prepare And Deploy VPN PKI
 

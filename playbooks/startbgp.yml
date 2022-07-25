@@ -1,0 +1,13 @@
+- name: enable bgp on frontends
+  hosts:
+    - frontends_a1
+    - frontends_a2
+    - frontends_c1
+    - frontends_c2
+  remote_user: root
+
+  tasks:
+    - name: start bgpd/quagga
+      service:
+        name: bgpd
+        state: started
