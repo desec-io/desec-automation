@@ -1,21 +1,25 @@
 [stack]
 digga.desec.io
 
-[frontends_a]
+[frontends_a1]
 ams-1.a.desec.io
 dfw-1.a.desec.io
+sao-1.a.desec.io
+
+[frontends_a2]
 fra-1.a.desec.io
 hkg-1.a.desec.io
 jnb-1.a.desec.io
-sao-1.a.desec.io
 syd-1.a.desec.io
 
-[frontends_c]
+[frontends_c1]
 dxb-1.c.desec.io
 fra-1.c.desec.io
 lax-1.c.desec.io
+sin-1.c.desec.io
+
+[frontends_c2]
 lga-1.c.desec.io
 lhr-1.c.desec.io
 scl-1.c.desec.io
-sin-1.c.desec.io
 tyo-1.c.desec.io

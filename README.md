@@ -45,7 +45,7 @@ Additionally, the following information may be provided:
 Note that these information may be different for different name server names!
 
 ```shell script
-ansible-playbook playbooks/frontend.yml -i hosts --limit "frontends_a" \
+ansible-playbook playbooks/frontend.yml -i hosts --limit "frontends_a1 frontends_a2" \
   -e DESECSTACK_DOMAIN=io \
   -e DESEC_NS_IPV6_ADDRESS="2607:f740:e633:deec::2" \
   -e DESEC_NS_IPV6_SUBNET="2607:f740:e633:deec::/80" \
@@ -55,7 +55,7 @@ ansible-playbook playbooks/frontend.yml -i hosts --limit "frontends_a" \
 ```
 
 ```shell script
-ansible-playbook playbooks/frontend.yml -i hosts --limit "fontends_c" \
+ansible-playbook playbooks/frontend.yml -i hosts --limit "fontends_c1 frontends_c2" \
   -e DESECSTACK_DOMAIN=io \
   -e DESEC_NS_IPV6_ADDRESS="2607:f740:e00a:deec::2" \
   -e DESEC_NS_IPV6_SUBNET="2607:f740:e00a:deec::/80" \

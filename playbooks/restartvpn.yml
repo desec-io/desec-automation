@@ -11,8 +11,10 @@
 
 - name: Restart Frontends VPN
   hosts:
-    - frontends_a
-    - frontends_c
+    - frontends_a1
+    - frontends_a2
+    - frontends_c1
+    - frontends_c2
   remote_user: root
 
   tasks:
