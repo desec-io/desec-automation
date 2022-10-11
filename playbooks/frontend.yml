@@ -1,20 +1,13 @@
 - name: install frontends
-  hosts:
-    - frontends_a1
-    - frontends_a2
-    - frontends_c1
-    - frontends_c2
+  hosts: frontends
   remote_user: root
 
   tasks:
-    - name: make sure that systemd-resolved is disabled
-      systemd:
-        name: systemd-resolved
-        enabled: no
-    - name: shut down systemd-resolved
+    - name: shut down and disable systemd-resolved
       service:
         name: systemd-resolved
         state: stopped
+        enabled: no
     - name: set resolver to 8.8.8.8
       copy:
         content: "nameserver 8.8.8.8\n"
@@ -31,7 +24,6 @@
     - name: Reboot if necessary
       reboot:
         msg: "Reboot initiated by Ansible due to kernel updates"
-        # TODO can this be randomized so that not all hosts are unavailable at the same time?
         connect_timeout: 5
         reboot_timeout: 300
         pre_reboot_delay: 0
@@ -55,16 +47,25 @@
         - python3-dev
         - python3-venv
         - python3-docker
+        - python3-pip
         - docker.io
-        - docker-compose  # note that we need this for the compose Python module, but the binary gets replaced below!
         - certbot
         - acpid
 
+    - name: Install pip
+      pip:
+        name: pip
+        state: latest
+
     - name: Install docker-compose from official github repo
       get_url:
-        url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+        url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64  # same as lib below
         dest: /usr/local/bin/docker-compose
         mode: 'u+x,g+x'
+
+    - name: Install docker-compose Python library
+      pip:
+        name: docker-compose==1.29.2  # same as binary above
 
     - name: enable docker daemon (for reboots)
       systemd:
@@ -73,7 +74,7 @@
 
     - name: configure docker daemon
       copy:
-        content: '{"userland-proxy": false}\n'
+        content: '{"userland-proxy": false}'
         dest: /etc/docker/daemon.json
 
     - name: restart docker daemon
@@ -88,11 +89,9 @@
         version: main
 
     - name: Pull docker images for frontend
-      community.general.docker_compose:
-        project_src: desec-ns
-        pull: yes
-        state: present
-        recreate: never
+      command:
+        cmd: 'docker-compose pull'
+        chdir: desec-ns
 
     - name: Create .env
       template:

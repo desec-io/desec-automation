@@ -1,4 +1,6 @@
 .idea
+dns
+.ipynb_checkpoints
 
 # files created by playbooks
 easy-rsa

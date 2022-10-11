@@ -1,0 +1,50 @@
+all:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  children:
+    stack:
+      hosts:
+        digga.desec.io:
+
+    frontends:
+      vars:
+        DESECSTACK_DOMAIN: io
+
+      children:
+        a:
+          vars:
+            DESEC_NS_NAME: "ns1.desec.io"
+            DESEC_NS_IPV6_ADDRESS: "2607:f740:e633:deec::2"
+            DESEC_NS_IPV6_SUBNET: "2607:f740:e633:deec::/80"
+            DESEC_NS_CARBONOURNAME_PREFIX: "dens1"
+          children:
+            a1:
+              hosts:
+                ams-1.a.desec.io:
+                dfw-1.a.desec.io:
+                sao-1.a.desec.io:
+            a2:
+              hosts:
+                fra-1.a.desec.io:
+                hkg-1.a.desec.io:
+                jnb-1.a.desec.io:
+                syd-1.a.desec.io:
+        c:
+          vars:
+            DESEC_NS_NAME: "ns2.desec.org"
+            DESEC_NS_IPV6_ADDRESS: "2607:f740:e00a:deec::2"
+            DESEC_NS_IPV6_SUBNET: "2607:f740:e00a:deec::/80"
+            DESEC_NS_CARBONOURNAME_PREFIX: "dens3"
+          children:
+            c1:
+              hosts:
+                dxb-1.c.desec.io:
+                fra-1.c.desec.io:
+                lax-1.c.desec.io:
+                sin-1.c.desec.io:
+            c2:
+              hosts:
+                lga-1.c.desec.io:
+                lhr-1.c.desec.io:
+                scl-1.c.desec.io:
+                tyo-1.c.desec.io:

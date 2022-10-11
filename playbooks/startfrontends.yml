@@ -1,13 +1,9 @@
 - name: Start Frontends
-  hosts:
-    - frontends_a1
-    - frontends_a2
-    - frontends_c1
-    - frontends_c2
+  hosts: frontends
   remote_user: root
 
   tasks:
-    - name: Start frontend
-      community.general.docker_compose:
-        project_src: desec-ns
-        state: present
+    - name: docker-compose up -d
+      command:
+        cmd: 'docker-compose up -d'
+        chdir: desec-ns

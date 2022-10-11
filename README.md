@@ -20,29 +20,24 @@ This repository contains a file of all deSEC hosts. Make sure it matches your ex
 
 To speed up synchronization and keep server load low, it is important to install new frontend nodes with an up-to-date
 database. Such database can be obtained from any existing frontend that can be shut down. In this example,
-we will use the sandbox frontend to obtain a backup.
+we will use fra-1.a.desec.io frontend to obtain a backup.
 
 ```shell script
-ansible-playbook playbooks/backuplmdb.yml -i hosts
+ansible-playbook playbooks/stopbgp.yml -i hosts --limit="fra-1.a.desec.io"
+ansible-playbook playbooks/backuplmdb.yml -i hosts --limit="fra-1.a.desec.io"
+ansible-playbook playbooks/startbgp.yml -i hosts --limit="fra-1.a.desec.io"
 ```
 
 ### Install or Update Frontend Servers
 
-To install or update frontend servers, the following information must be supplied:
+Copy `hosts/.secrets.yml.dist` to `hosts/secrets.yml` and fill in the values:
 
-1. `DESECSTACK_DOMAIN` of the deSEC stack you want to connect to.
-1. `DESEC_NS_IPV6_ADDRESS`: IPv6 address the frontend will be reachable under.
-1. `DESEC_NS_IPV6_SUBNET`: subnet of `DESEC_NS_IPV6_ADDRESS`, in CIDR notation.
-
-Additionally, the following information may be provided:
-
-1. `DESEC_NS_NAME`: full DNS name under which the name server will be reached.
 1. `DESEC_NS_SIGNALING_DOMAIN_ZONE_PRIVATE_KEY_B64`: base64 encoded private key for signing signaling records.
-    Specify to enable desec-ns to provide Signaling Records. If provided, `DESEC_NS_NAME` must be given.
-1. `DESEC_NS_LMDB_BACKUP`: full qualified path of created LMDB backup (see above). Specify to enable faster
-    synchronization of zone data of desec-ns with desec-stack.
+    Specify to enable desec-ns to provide Signaling Records.
+1. `DESEC_NS_COOKIES_SECRET`:
 
-Note that these information may be different for different name server names!
+Remaining configuration values can be found in `all.yml` and are specific to the desec.io deployment of this software.
+Deployment elsewhere needs adjustment of these values.
 
 ### Update Procedure
 
@@ -51,52 +46,29 @@ Be careful to **not** run any of the playbooks below without the `limit` paramet
 1. Shut down BGP for Group 1
 
     ```shell script
-    ansible-playbook playbooks/stopbgp.yml --limit="frontends_a1 frontends_c1" -i hosts
+    ansible-playbook playbooks/stopbgp.yml -i hosts --limit="a1 c1"
     ```
 
-1. Update software for Group 1, separately for A and C networks
-
-    Store private key for Bootstrapping zone in shell variables.
+1. Update software for Group 1
 
     ```shell script
-    NS1_KEY=...
-    NS2_KEY=...
-    ```
+    ansible-playbook playbooks/frontend.yml -i hosts --limit "a1 c1"
 
-    ```shell script
-    ansible-playbook playbooks/frontend.yml -i hosts --limit "frontends_a1" \
-      -e DESECSTACK_DOMAIN=io \
-      -e DESEC_NS_IPV6_ADDRESS="2607:f740:e633:deec::2" \
-      -e DESEC_NS_IPV6_SUBNET="2607:f740:e633:deec::/80" \
-      -e DESEC_NS_SIGNALING_DOMAIN_ZONE_PRIVATE_KEY_B64=$NS1_KEY \
-      -e DESEC_NS_NAME=ns1.desec.io \
-      -e DESEC_NS_LMDB_BACKUP=lmdb-backup/ns3.sandbox.dedyn.io/desec-ns/lmdb-backup/backup/20201030:161412_dump.tar.gz
-    ```
-
-    ```shell script
-    ansible-playbook playbooks/frontend.yml -i hosts --limit "frontends_c1" \
-      -e DESECSTACK_DOMAIN=io \
-      -e DESEC_NS_IPV6_ADDRESS="2607:f740:e00a:deec::2" \
-      -e DESEC_NS_IPV6_SUBNET="2607:f740:e00a:deec::/80" \
-      -e DESEC_NS_SIGNALING_DOMAIN_ZONE_PRIVATE_KEY_B64=$NS2_KEY \
-      -e DESEC_NS_NAME=ns2.desec.org \
-      -e DESEC_NS_LMDB_BACKUP=lmdb-backup/ns3.sandbox.dedyn.io/desec-ns/lmdb-backup/backup/20201030:161412_dump.tar.gz
-    ```
 
 1. Recreate containers for Group 1
 
     ```shell script
-    ansible-playbook playbooks/startfrontends.yml --limit "frontends_a1 frontends_c1" -i hosts
+    ansible-playbook playbooks/startfrontends.yml -i hosts --limit "a1 c1"
     ```
 
 1. Test everything works as expected in Group 1
 1. Re-enable BGP for Group 1
 
     ```shell script
-    ansible-playbook playbooks/startbgp.yml --limit="frontends_a2 frontends_c2" -i hosts
+    ansible-playbook playbooks/startbgp.yml -i hosts --limit="a1 c1"
     ```
     
-1. Repeat for Group 2
+1. Repeat for Group 2 (`--limit="a2 c2"`)
 
 ### Prepare And Deploy VPN PKI
 

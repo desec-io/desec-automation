@@ -1,0 +1,14 @@
+- name: Debug
+  hosts: frontends
+  remote_user: root
+
+  tasks:
+    - name: Print environment
+      ansible.builtin.debug:
+        msg: |
+          System {{ inventory_hostname }}
+          DESECSTACK_DOMAIN: {{ DESECSTACK_DOMAIN }}
+          DESEC_NS_NAME: {{ DESEC_NS_NAME }}
+          DESEC_NS_IPV6_ADDRESS: {{ DESEC_NS_IPV6_ADDRESS }}
+          DESEC_NS_IPV6_SUBNET: {{ DESEC_NS_IPV6_SUBNET }}
+          DESEC_NS_SIGNALING_DOMAIN_ZONE_PRIVATE_KEY_B64: {{ DESEC_NS_SIGNALING_DOMAIN_ZONE_PRIVATE_KEY_B64 }}

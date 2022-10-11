@@ -1,9 +1,5 @@
 - name: disable bgp on frontends
-  hosts:
-    - frontends_a1
-    - frontends_a2
-    - frontends_c1
-    - frontends_c2
+  hosts: frontends
   remote_user: root
 
   tasks:
@@ -11,3 +7,4 @@
       service:
         name: bgpd
         state: stopped
+        enabled: false

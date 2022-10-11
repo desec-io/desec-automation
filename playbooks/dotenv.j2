@@ -9,7 +9,8 @@ DESEC_NS_SIGNALING_DOMAIN_SOA_RNAME=get.desec.{{ DESECSTACK_DOMAIN }}
 # ns-related
 DESEC_NS_APIKEY={{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=32') }}
 DESEC_NS_CARBONSERVER=37.252.122.50
-DESEC_NS_CARBONOURNAME=dens3{{ ansible_hostname | regex_search('^[a-z]+') }}
+DESEC_NS_CARBONOURNAME={{ DESEC_NS_CARBONOURNAME_PREFIX }}{{ ansible_hostname | regex_search('^[a-z]+') }}
+DESEC_NS_COOKIES_SECRET={{ DESEC_NS_COOKIES_SECRET }}
 
 # replication-related
 DESECSTACK_VPN_SERVER=desec.{{ DESECSTACK_DOMAIN }}
