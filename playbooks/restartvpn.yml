@@ -4,22 +4,17 @@
 
   tasks:
     - name: Restart OpenVPN container
-      community.general.docker_compose:
-        project_src: desec-stack
-        restarted: yes
-        services: openvpn-server
+      command:
+        cmd: 'docker-compose restart openvpn-server'
+        chdir: desec-stack
 
 - name: Restart Frontends VPN
   hosts:
-    - frontends_a1
-    - frontends_a2
-    - frontends_c1
-    - frontends_c2
+    - frontends
   remote_user: root
 
   tasks:
     - name: Restart OpenVPN container
-      community.general.docker_compose:
-        project_src: desec-ns
-        restarted: yes
-        services: openvpn-client
+      command:
+        cmd: 'docker-compose restart openvpn-client'
+        chdir: desec-ns
