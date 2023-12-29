@@ -1,0 +1,9 @@
+- name: Start Frontends
+  hosts: frontends
+  remote_user: root
+
+  tasks:
+    - name: docker-compose down
+      command:
+        cmd: 'docker-compose down'
+        chdir: desec-ns

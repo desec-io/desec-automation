@@ -1,0 +1,26 @@
+- name: Start Frontends
+  hosts: frontends
+  remote_user: root
+
+  tasks:
+    - name: shut down bgpd/quagga
+      service:
+        name: bgpd
+        state: stopped
+        enabled: false
+
+    - name: docker-compose down
+      command:
+        cmd: 'docker-compose down'
+        chdir: desec-ns
+
+    - name: docker-compose up -d
+      command:
+        cmd: 'docker-compose up -d'
+        chdir: desec-ns
+
+    - name: start bgpd/quagga
+      service:
+        name: bgpd
+        state: started
+        enabled: true
