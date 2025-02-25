@@ -5,7 +5,7 @@
   tasks:
     - name: Restart OpenVPN container
       command:
-        cmd: 'docker-compose restart openvpn-server'
+        cmd: 'docker compose restart openvpn-server'
         chdir: desec-stack
 
 - name: Restart Frontends VPN
