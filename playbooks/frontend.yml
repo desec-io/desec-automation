@@ -20,7 +20,7 @@
         autoremove: yes
     - name: Check if a reboot is needed
       register: reboot_required_file
-      stat: path=/var/run/reboot-required get_md5=no
+      stat: path=/var/run/reboot-required get_checksum=no
     - name: Reboot if necessary
       reboot:
         msg: "Reboot initiated by Ansible due to kernel updates"
@@ -47,25 +47,17 @@
         - python3-dev
         - python3-venv
         - python3-docker
-        - python3-pip
+        - python3-compose
         - docker.io
+        - docker-compose
         - certbot
         - acpid
-
-    - name: Install pip
-      pip:
-        name: pip
-        state: latest
 
     - name: Install docker-compose from official github repo
       get_url:
         url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64  # same as lib below
         dest: /usr/local/bin/docker-compose
         mode: 'u+x,g+x'
-
-    - name: Install docker-compose Python library
-      pip:
-        name: docker-compose==1.29.2  # same as binary above
 
     - name: enable docker daemon (for reboots)
       systemd:
@@ -88,16 +80,16 @@
         dest: desec-ns
         version: main
 
-    - name: Pull docker images for frontend
-      command:
-        cmd: 'docker-compose pull'
-        chdir: desec-ns
-
     - name: Create .env
       template:
         src: dotenv.j2
         dest: desec-ns/.env
         mode: '0600'
+
+    - name: Pull docker images for frontend
+      command:
+        cmd: 'docker-compose pull'
+        chdir: desec-ns
 
     - name: Upload lmdb backup
       when: DESEC_NS_LMDB_BACKUP is defined
