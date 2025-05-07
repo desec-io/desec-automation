@@ -103,9 +103,9 @@ Ansible playbooks in here can be improved a lot:
 
 ## Debugging
 
-To run a command (query) against all frontends, the following statement can be used. (Requires zsh.)
+To run a command (query) on all frontends, the following statement can be used. (Tested on zsh.)
 
 ```
-for NS in $(cat hosts | grep -vE '^$|\[|digga')
-(echo -n "$NS: "; dig CDNSKEY _dsboot.desec.io._signal.ns2.desec.org @$NS +short; echo)
+for NS in $(grep -Eo '[a-z]{3}-[123][.][abc][.]desec[.]io' hosts/all.yml | sort | uniq)
+(echo -n "$NS: "; ssh root@$NS openssl x509 -in desec-ns/openvpn-client/secrets/ca.crt -noout -text | grep "Not After"; echo)
 ```
