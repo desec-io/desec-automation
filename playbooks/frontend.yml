@@ -90,23 +90,5 @@
 
     - name: Pull docker images for frontend
       command:
-        cmd: 'docker-compose pull'
-        chdir: desec-ns
-
-    - name: Upload lmdb backup
-      when: DESEC_NS_LMDB_BACKUP is defined
-      copy:
-        src: '{{ DESEC_NS_LMDB_BACKUP }}'
-        dest: desec-ns/lmdb-backup/backup
-
-    - name: Find lmdb backup
-      when: DESEC_NS_LMDB_BACKUP is defined
-      find:
-        path: desec-ns/lmdb-backup/backup/
-      register: files
-
-    - name: Restore lmdb backup
-      when: DESEC_NS_LMDB_BACKUP is defined
-      command:
-        cmd: './load.sh {{ (files.files | sort(attribute="ctime"))[-1].path | basename }}'
+        cmd: 'docker compose pull'
         chdir: desec-ns
