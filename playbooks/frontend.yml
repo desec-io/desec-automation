@@ -2,16 +2,35 @@
   hosts: frontends
   remote_user: root
 
-  tasks:
-    - name: shut down and disable systemd-resolved
-      service:
+  handlers:
+    - name: Restart systemd-resolved
+      ansible.builtin.service:
         name: systemd-resolved
-        state: stopped
-        enabled: no
-    - name: set resolver to 8.8.8.8
-      copy:
-        content: "nameserver 8.8.8.8\n"
+        state: restarted
+
+  tasks:
+    # Free up port 53
+    - name: Ensure systemd-resolved drop-in directory exists
+      ansible.builtin.file:
+        path: /etc/systemd/resolved.conf.d
+        state: directory
+        mode: "0755"
+
+    - name: Disable DNS stub listener
+      ansible.builtin.copy:
+        dest: /etc/systemd/resolved.conf.d/no-stub.conf
+        mode: "0644"
+        content: |
+          [Resolve]
+          DNSStubListener=no
+      notify: Restart systemd-resolved
+
+    - name: Ensure resolv.conf points to systemd-resolved upstream file
+      ansible.builtin.file:
+        src: /run/systemd/resolve/resolv.conf
         dest: /etc/resolv.conf
+        state: link
+        force: true
 
     - name: Upgrade packages
       apt:
